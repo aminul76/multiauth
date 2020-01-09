@@ -7,59 +7,138 @@
 <a href="https://packagist.org/packages/laravel/framework"><img src="https://poser.pugx.org/laravel/framework/license.svg" alt="License"></a>
 </p>
 
-## About Laravel
+work process
+first install laravel command line
+composer create-project --prefer-dist laravel/laravel multiauth"5.6.*"
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel attempts to take the pain out of development by easing common tasks used in the majority of web projects, such as:
+laravel auth command 
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+php artisan make:auth
 
-Laravel is accessible, yet powerful, providing tools needed for large, robust applications.
+resources>views>auth. auth folder copy past rename admin that means 
+resources>views>admin
 
-## Learning Laravel
+Controllers>Auth .Auth folder copy past remane Admin that means 
+Controllers>Admin
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of any modern web application framework, making it a breeze to get started learning the framework.
+make Admin model ands Admins tables command
 
-If you're not in the mood to read, [Laracasts](https://laracasts.com) contains over 1100 video tutorials on a range of topics including Laravel, modern PHP, unit testing, JavaScript, and more. Boost the skill level of yourself and your entire team by digging into our comprehensive video library.
+php artisan make:model Admin -m
+app>Admin.php. copy User.php past Admin.php
+change 
+protected $guard = 'admin';
+from class User extends Authenticatable to class Admin extends Authenticatable
 
-## Laravel Sponsors
+Admin for route group
 
-We would like to extend our thanks to the following sponsors for helping fund on-going Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell):
+Route::group(['prefix'=>'admin'],function(){
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[Cubet Techno Labs](https://cubettech.com)**
-- **[British Software Development](https://www.britishsoftware.co)**
-- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
-- [UserInsights](https://userinsights.com)
-- [Fragrantica](https://www.fragrantica.com)
-- [SOFTonSOFA](https://softonsofa.com/)
-- [User10](https://user10.com)
-- [Soumettre.fr](https://soumettre.fr/)
-- [CodeBrisk](https://codebrisk.com)
-- [1Forge](https://1forge.com)
-- [TECPRESSO](https://tecpresso.co.jp/)
-- [Runtime Converter](http://runtimeconverter.com/)
-- [WebL'Agence](https://weblagence.com/)
-- [Invoice Ninja](https://www.invoiceninja.com)
-- [iMi digital](https://www.imi-digital.de/)
-- [Earthlink](https://www.earthlink.ro/)
-- [Steadfast Collective](https://steadfastcollective.com/)
+});
 
-## Contributing
+in route grop create route
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-## Security Vulnerabilities
+    Route::get('/login', 'Admin\LoginController@showLoginForm')->name('admin.login');
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+create showLoginForm in Admin>LoginController
+ 
+ public function showLoginForm(){
+        return view('admin.login');
+    }
+    
+create gust:admin in Admin>loginController
+'guest:admin'
 
-## License
+in route group create route 
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+Route::post('/login', 'Admin\LoginController@login')->name('admin.login.submit');
+
+create login function in Admin>login
+
+ public function login(Request $request)
+    {
+        $this->validate($request, [
+            'email' => 'required|string',
+            'password' => 'required|string',
+        ]);
+        $credential = [
+            'email'=>$request->email,
+            'password'=>$request->password,
+        ];
+
+        if(Auth::guard('admin')->attempt($credential, $request->member)){
+            return redirect()->intended(route('admin.home'));
+        }
+        return redirect()->back()->withInput($request->only('email,remember'));
+    }
+
+and use Admin model ,use Auth namespace Admin,use reguest  
+namespace App\Http\Controllers\Admin;
+use Illuminate\Http\Request;
+use App\Admin;
+use Illuminate\Support\Facades\Auth;
+
+
+set route resources>views>admin>login.blage.php
+
+ action="{{ route('admin.login.submit') }}"
+
+in admin route group create route
+Route::get('/', 'AdminController@index')->name('admin.home');
+Crate Controller AdminController command line
+
+php artisan make:controller AdminController
+
+in Controlles>AdminController create index function
+
+ public function index()
+    {
+        return view('admin/admin_home');
+    }
+
+in resources>views>admin folder create file admin_home
+copy home.blade.php past in admin_home.blade.php 
+
+in admin route group create route 
+
+ Route::get('/register', 'Admin\RegisterController@showRegistrationForm')->name('admin.register');
+
+create showRegistrationForm in Admin>RegisterController
+
+ public function showRegistrationForm()
+    {
+         return view('admin.register');
+    }
+
+
+in admin route gropu create route 
+
+  Route::post('/register', 'Admin\RegisterController@register')->name('admin.register.submit');
+ 
+in Admin>RegisterController
+
+protected function create(array $data)
+    {
+        return Admin::create([
+            'name' => $data['name'],
+            'email' => $data['email'],
+            'password' => Hash::make($data['password']),
+        ]);
+    }
+only   change User to Admin 
+
+and use namespace Admin, Admin model,
+
+namespace App\Http\Controllers\Admin;
+
+use App\Admin;
+
+
+resources>views>admin . change route 
+form route('register') to route('admin.register.submit')
+
+
+url:localhost:8000/admin/login
+localhost:8000/admin/register 
+
+
